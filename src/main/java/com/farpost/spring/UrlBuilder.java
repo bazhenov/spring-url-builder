@@ -1,17 +1,15 @@
 package com.farpost.spring;
 
-import org.springframework.core.Constants;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static java.net.URLEncoder.encode;
 
 /**
  * Simple url build API for Spring Annotation based controllers.
@@ -24,7 +22,7 @@ import java.util.Set;
  * class MyController {
  *   <code>@RequestMapping("/dashboard")</code>
  *   public void handleDashboard() {
- *		 }
+ *			}
  * }
  * </pre>
  * then following code build url for this controller:
@@ -44,12 +42,40 @@ public class UrlBuilder {
 	private final HttpServletRequest request;
 	private final Class<?> type;
 	private final String urlPattern;
-	private final Map<String, String> parameters = new HashMap<String, String>();
+	private final Set<String> placeholderParameterNames;
+	private final Map<String, String> queryStringParameters = new HashMap<String, String>();
+	private final Map<String, String> urlParameters = new HashMap<String, String>();
+
+	private static final Pattern placeholderPattern;
+
+	static {
+		placeholderPattern = Pattern.compile("\\{([a-zA-Z]+)\\}");
+	}
 
 	private UrlBuilder(HttpServletRequest request, Class<?> type, String methodName) {
 		this.request = request;
 		this.type = type;
 		urlPattern = getUrlPattern(type, methodName);
+		placeholderParameterNames = getPlaceholderParameterNames(urlPattern);
+
+	}
+
+	/**
+	 * Calculate and return all parameter names defined in url string.
+	 * <p/>
+	 * For example if input string is <code>/news/{date}/{id}</code> this method returns set
+	 * <code>["date", "id"]</code>.
+	 *
+	 * @param pattern url pattern
+	 * @return set of parameter names
+	 */
+	private static Set<String> getPlaceholderParameterNames(String pattern) {
+		Set<String> set = new HashSet<String>();
+		Matcher matches = placeholderPattern.matcher(pattern);
+		while (matches.find()) {
+			set.add(matches.group(1));
+		}
+		return set;
 	}
 
 	/**
@@ -82,7 +108,11 @@ public class UrlBuilder {
 				" doesn't have @RequestMapping annotation");
 		}
 		// At the moment we'll take only first pattern
-		return mapping.value()[0];
+		String[] urlPatterns = mapping.value();
+		if (urlPatterns.length > 1) {
+			throw new UnsupportedOperationException("Multiple handler mappings not supported");
+		}
+		return urlPatterns[0];
 	}
 
 	/**
@@ -117,7 +147,11 @@ public class UrlBuilder {
 		if (name.isEmpty()) {
 			throw new IllegalArgumentException("Paramter name should not be empty");
 		}
-		parameters.put(name, value);
+		if (placeholderParameterNames.contains(name)) {
+			urlParameters.put(name, value);
+		} else {
+			queryStringParameters.put(name, value);
+		}
 		return this;
 	}
 
@@ -127,24 +161,29 @@ public class UrlBuilder {
 	 * @return url
 	 */
 	public String asString() {
-		StringBuffer url = new StringBuffer(urlPattern);
-		if (!parameters.isEmpty()) {
-			url.append('?');
-			url.append(buildQueryString(parameters));
+		String url = urlPattern;
+
+		for (String name : placeholderParameterNames) {
+			url = url.replace("{" + name + "}", urlParameters.get(name));
 		}
-		return url.toString();
+
+		if (!queryStringParameters.isEmpty()) {
+			url = url + '?';
+			url = url + buildQueryString(queryStringParameters);
+		}
+		return url;
 	}
 
 	private String buildQueryString(Map<String, String> params) {
 		StringBuffer queryString = new StringBuffer();
 		try {
-			Iterator<Map.Entry<String,String>> iterator = params.entrySet().iterator();
+			Iterator<Map.Entry<String, String>> iterator = params.entrySet().iterator();
 
 			while (iterator.hasNext()) {
 				Map.Entry<String, String> row = iterator.next();
-				queryString.append(URLEncoder.encode(row.getKey(), "UTF8"));
+				queryString.append(encode(row.getKey(), "UTF8"));
 				queryString.append('=');
-				queryString.append(URLEncoder.encode(row.getValue(), "UTF8"));
+				queryString.append(encode(row.getValue(), "UTF8"));
 				if (iterator.hasNext()) {
 					queryString.append('&');
 				}

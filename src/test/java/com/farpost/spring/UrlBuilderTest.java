@@ -14,25 +14,38 @@ public class UrlBuilderTest {
 
 	@Test
 	public void shouldBeAbleToBuildUrlForSimpleMappings() {
-		class SimpleController {
+		class Controller {
 			@RequestMapping("/hello")
 			public void handle() {}
 		}
 
-		String url = build(request, SimpleController.class, "#handle").asString();
+		String url = build(request, Controller.class, "#handle").asString();
 		assertThat(url, equalTo("/hello"));
 	}
 
 	@Test
 	public void shouldBeAbleToBuildUrlWithParameters() {
-		class SimpleController {
+		class Controller {
 			@RequestMapping("/hello")
 			public void handle() {}
 		}
 
-		String url = build(request, SimpleController.class, "#handle").
+		String url = build(request, Controller.class, "#handle").
 			parameter("name", "John").
 			asString();
 		assertThat(url, equalTo("/hello?name=John"));
+	}
+
+	@Test
+	public void shouldBeAbleToPassParametersInPattern() {
+		class Controller {
+			@RequestMapping("/blog/{date}")
+			public void handle() {}
+		}
+
+		String url = build(request, Controller.class, "#handle").
+			parameter("date", "2010-01-21").
+			asString();
+		assertThat(url, equalTo("/blog/2010-01-21"));
 	}
 }
