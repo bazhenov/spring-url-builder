@@ -1,9 +1,17 @@
 package com.farpost.spring;
 
+import org.springframework.core.Constants;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Simple url build API for Spring Annotation based controllers.
@@ -16,7 +24,7 @@ import java.lang.reflect.Method;
  * class MyController {
  *   <code>@RequestMapping("/dashboard")</code>
  *   public void handleDashboard() {
- *		}
+ *		 }
  * }
  * </pre>
  * then following code build url for this controller:
@@ -36,6 +44,7 @@ public class UrlBuilder {
 	private final HttpServletRequest request;
 	private final Class<?> type;
 	private final String urlPattern;
+	private final Map<String, String> parameters = new HashMap<String, String>();
 
 	private UrlBuilder(HttpServletRequest request, Class<?> type, String methodName) {
 		this.request = request;
@@ -91,16 +100,58 @@ public class UrlBuilder {
 		if (methodName == null || request == null || type == null) {
 			throw new NullPointerException();
 		}
-		if (methodName.length() <= 1) {
-			throw new IllegalArgumentException("Method name should be non empty string");
-		}
 		if (methodName.charAt(0) != '#') {
 			throw new IllegalArgumentException("Method name should have leading '#' symbol. For example: '#handle'");
 		}
-		return new UrlBuilder(request, type, methodName.substring(1));
+		methodName = methodName.substring(1);
+		if (methodName.isEmpty()) {
+			throw new IllegalArgumentException("Method name should be non empty string");
+		}
+		return new UrlBuilder(request, type, methodName);
 	}
 
+	public UrlBuilder parameter(String name, String value) {
+		if (name == null) {
+			throw new NullPointerException();
+		}
+		if (name.isEmpty()) {
+			throw new IllegalArgumentException("Paramter name should not be empty");
+		}
+		parameters.put(name, value);
+		return this;
+	}
+
+	/**
+	 * Returns string representation of url
+	 *
+	 * @return url
+	 */
 	public String asString() {
-		return urlPattern;
+		StringBuffer url = new StringBuffer(urlPattern);
+		if (!parameters.isEmpty()) {
+			url.append('?');
+			url.append(buildQueryString(parameters));
+		}
+		return url.toString();
+	}
+
+	private String buildQueryString(Map<String, String> params) {
+		StringBuffer queryString = new StringBuffer();
+		try {
+			Iterator<Map.Entry<String,String>> iterator = params.entrySet().iterator();
+
+			while (iterator.hasNext()) {
+				Map.Entry<String, String> row = iterator.next();
+				queryString.append(URLEncoder.encode(row.getKey(), "UTF8"));
+				queryString.append('=');
+				queryString.append(URLEncoder.encode(row.getValue(), "UTF8"));
+				if (iterator.hasNext()) {
+					queryString.append('&');
+				}
+			}
+		} catch (UnsupportedEncodingException e) {
+			throw new RuntimeException(e);
+		}
+		return queryString.toString();
 	}
 }
