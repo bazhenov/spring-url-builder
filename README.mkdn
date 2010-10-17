@@ -1,1 +1,23 @@
-Simple API for building urls for Spring Controllers Annotated with `@RequestMapping` annotation
+Simple API for building urls for Spring Controllers Annotated with `@RequestMapping` annotation.
+
+How many times you wrote following code?
+
+	String url = "/feed/" + applicationId + "?date=" + URLEncoder.encode(date.toString());
+
+There is real pain to construct URLs from parts.
+
+If you use Spring Framework annotation based controllers you already provide all information
+about mappings url to controllers and vice versa.
+
+	class MyController {
+
+		@RequestMapping("/feed/{applicationId}")
+		public void handle(@RequestParam String date) {}
+	}
+
+`SpringUrlBuilder` let you build urls for spring handlers and do not mess with string concatenation:
+
+	String url = UrlBuilder.build(request, MyController.class, "#handle").
+		parameter("applicationId", applicationId).
+		parameter("date", date.toString()).
+		asString();
