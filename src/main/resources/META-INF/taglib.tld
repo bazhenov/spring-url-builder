@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<taglib version="2.1"
+				xmlns="http://java.sun.com/xml/ns/javaee"
+				xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+				xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-jsptaglibrary_2_1.xsd">
+
+	<tlib-version>1.1</tlib-version>
+	<short-name>spring-url-builder</short-name>
+	<uri>http://farpost.com/spring/url-builder</uri>
+
+	<function>
+		<name>url</name>
+		<function-class>com.farpost.spring.Functions</function-class>
+		<function-signature>java.lang.String buildUrl(javax.servlet.http.HttpServletRequest,com.farpost.spring.Endpoint)
+		</function-signature>
+	</function>
+</taglib>
