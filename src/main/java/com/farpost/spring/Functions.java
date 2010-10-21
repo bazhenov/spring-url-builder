@@ -4,6 +4,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import java.util.Map;
 
+import static com.farpost.spring.PublishRequestFilter.getCurrentRequest;
 import static com.farpost.spring.UrlBuilder.build;
 
 public class Functions {
@@ -14,5 +15,9 @@ public class Functions {
 			builder.parameter(row.getKey(), row.getValue());
 		}
 		return builder.asString();
+	}
+
+	public static String buildUrl(Action action) {
+		return buildUrl(getCurrentRequest(), action);
 	}
 }

@@ -9,9 +9,15 @@
 	<uri>http://farpost.com/spring/url-builder</uri>
 
 	<function>
-		<name>url</name>
+		<name>urlForRequest</name>
 		<function-class>com.farpost.spring.Functions</function-class>
-		<function-signature>java.lang.String buildUrl(javax.servlet.http.HttpServletRequest,com.farpost.spring.Endpoint)
+		<function-signature>java.lang.String buildUrl(javax.servlet.http.HttpServletRequest, com.farpost.spring.Action)
 		</function-signature>
 	</function>
+	<function>
+		<name>url</name>
+		<function-class>com.farpost.spring.Functions</function-class>
+		<function-signature>java.lang.String buildUrl(com.farpost.spring.Action)</function-signature>
+	</function>
+
 </taglib>
