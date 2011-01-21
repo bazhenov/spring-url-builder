@@ -4,7 +4,7 @@
 
 	<groupId>com.farpost.spring</groupId>
 	<artifactId>spring-url-builder</artifactId>
-	<version>1.0</version>
+	<version>1.1</version>
 	<packaging>jar</packaging>
 
 	<name>Spring Url Builder</name>
