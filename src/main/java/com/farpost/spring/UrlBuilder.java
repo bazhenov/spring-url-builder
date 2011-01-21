@@ -22,7 +22,7 @@ import static java.net.URLEncoder.encode;
  * class MyController {
  *   <code>@RequestMapping("/dashboard")</code>
  *   public void handleDashboard() {
- *			}
+ *			 }
  * }
  * </pre>
  * then following code build url for this controller:
@@ -39,6 +39,7 @@ import static java.net.URLEncoder.encode;
  */
 public class UrlBuilder {
 
+	private static final String ENCODING = "UTF8";
 	private final HttpServletRequest request;
 	private final Class<?> type;
 	private final String urlPattern;
@@ -86,6 +87,32 @@ public class UrlBuilder {
 	 * @return url pattern
 	 */
 	private static String getUrlPattern(Class<?> type, String methodName) {
+		Method handlerMethod = getHandlerMethod(type, methodName);
+
+		String classPattern = getClassUrlPattern(type);
+		String methodPattern = getMethodUrlPattern(handlerMethod);
+
+		return classPattern != null
+			? classPattern.replace("*", methodPattern)
+			: methodPattern;
+
+	}
+
+	private static String getMethodUrlPattern(Method handlerMethod) {
+		RequestMapping mapping = handlerMethod.getAnnotation(RequestMapping.class);
+		if (mapping == null) {
+			throw new IllegalArgumentException("Method " + handlerMethod.getName() + "() on type: " +
+				handlerMethod.getDeclaringClass().getName() + " doesn't have @RequestMapping annotation");
+		}
+		// At the moment we'll take only first pattern
+		String[] urlPatterns = mapping.value();
+		if (urlPatterns.length > 1) {
+			throw new UnsupportedOperationException("Multiple handler mappings not supported");
+		}
+		return urlPatterns[0];
+	}
+
+	private static Method getHandlerMethod(Class<?> type, String methodName) {
 		Method handlerMethod = null;
 
 		for (Method m : type.getMethods()) {
@@ -102,17 +129,22 @@ public class UrlBuilder {
 			throw new IllegalArgumentException("Method " + methodName + "() not found on type: " + type.getName());
 		}
 
-		RequestMapping mapping = handlerMethod.getAnnotation(RequestMapping.class);
+		return handlerMethod;
+	}
+
+	private static String getClassUrlPattern(Class<?> type) {
+		RequestMapping mapping = type.getAnnotation(RequestMapping.class);
 		if (mapping == null) {
-			throw new IllegalArgumentException("Method " + methodName + "() on type: " + type.getName() +
-				" doesn't have @RequestMapping annotation");
+			return null;
 		}
-		// At the moment we'll take only first pattern
-		String[] urlPatterns = mapping.value();
-		if (urlPatterns.length > 1) {
-			throw new UnsupportedOperationException("Multiple handler mappings not supported");
+		String[] value = mapping.value();
+		if (value.length <= 0) {
+			return null;
+		} else if (value.length > 1) {
+			throw new UnsupportedOperationException("Multiple url pattern on class level are not supported");
+		} else {
+			return value[0];
 		}
-		return urlPatterns[0];
 	}
 
 	/**
@@ -181,9 +213,9 @@ public class UrlBuilder {
 
 			while (iterator.hasNext()) {
 				Map.Entry<String, String> row = iterator.next();
-				queryString.append(encode(row.getKey(), "UTF8"));
+				queryString.append(encode(row.getKey(), ENCODING));
 				queryString.append('=');
-				queryString.append(encode(row.getValue(), "UTF8"));
+				queryString.append(encode(row.getValue(), ENCODING));
 				if (iterator.hasNext()) {
 					queryString.append('&');
 				}

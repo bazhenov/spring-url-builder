@@ -1,19 +1,19 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.farpost.spring</groupId>
-  <artifactId>spring-url-builder</artifactId>
-  <version>1.0</version>
-  <packaging>jar</packaging>
+	<groupId>com.farpost.spring</groupId>
+	<artifactId>spring-url-builder</artifactId>
+	<version>1.0</version>
+	<packaging>jar</packaging>
 
-  <name>Spring Url Builder</name>
+	<name>Spring Url Builder</name>
 
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
 
-  <dependencies>
+	<dependencies>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-web</artifactId>
@@ -27,19 +27,19 @@
 
 		<!-- Test dependencies -->
 		<dependency>
-      <groupId>org.testng</groupId>
-      <artifactId>testng</artifactId>
-      <version>5.9</version>
+			<groupId>org.testng</groupId>
+			<artifactId>testng</artifactId>
+			<version>5.9</version>
 			<classifier>jdk15</classifier>
-      <scope>test</scope>
-    </dependency>
+			<scope>test</scope>
+		</dependency>
 		<dependency>
 			<groupId>org.hamcrest</groupId>
 			<artifactId>hamcrest-all</artifactId>
 			<version>1.1</version>
 			<scope>test</scope>
 		</dependency>
-  </dependencies>
+	</dependencies>
 
 	<build>
 		<plugins>
@@ -52,6 +52,34 @@
 					<target>1.6</target>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>2.1.2</version>
+				<executions>
+					<execution>
+						<phase>verify</phase>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
 		</plugins>
 	</build>
+
+	<distributionManagement>
+		<repository>
+			<id>farpost-releases</id>
+			<name>FarPost releases repository</name>
+			<url>http://maven.dev/releases</url>
+		</repository>
+		<snapshotRepository>
+			<id>farpost-snapshots</id>
+			<name>FarPost shapshots repository</name>
+			<url>http://maven.dev/snapshots</url>
+		</snapshotRepository>
+	</distributionManagement>
+
 </project>

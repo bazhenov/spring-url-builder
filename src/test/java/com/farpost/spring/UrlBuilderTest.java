@@ -48,4 +48,17 @@ public class UrlBuilderTest {
 			asString();
 		assertThat(url, equalTo("/blog/2010-01-21"));
 	}
+
+	@Test
+	public void shouldBeAbleToProcessClassLevelAnnotations() {
+
+		@RequestMapping("/module/*")
+		class Controller {
+			@RequestMapping("foo")
+			public void handle() {}
+		}
+
+		String url = build(request, Controller.class, "#handle").asString();
+		assertThat(url, equalTo("/module/foo"));
+	}
 }

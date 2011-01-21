@@ -11,7 +11,8 @@
 	<function>
 		<name>urlForRequest</name>
 		<function-class>com.farpost.spring.Functions</function-class>
-		<function-signature>java.lang.String buildUrl(javax.servlet.http.HttpServletRequest, com.farpost.spring.Action)
+		<function-signature>
+			java.lang.String buildUrl(javax.servlet.http.HttpServletRequest,com.farpost.spring.Action))
 		</function-signature>
 	</function>
 	<function>

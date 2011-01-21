@@ -32,8 +32,7 @@ public class PublishRequestFilter implements Filter {
 	}
 
 	@Override
-	public void destroy() {
-	}
+	public void destroy() {}
 
 	/**
 	 * Returns current request or throw {@link IllegalAccessException} if current thread out of request processing
