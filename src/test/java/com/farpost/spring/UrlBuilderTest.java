@@ -61,4 +61,16 @@ public class UrlBuilderTest {
 		String url = build(request, Controller.class, "#handle").asString();
 		assertThat(url, equalTo("/module/foo"));
 	}
+
+	@Test
+	public void shouldBeAbleToProcessContextUrls() {
+
+		class Controller {
+			@RequestMapping("/foo")
+			public void handle() {}
+		}
+
+		String url = build(new RequestStub("/bar"), Controller.class, "#handle").asString();
+		assertThat(url, equalTo("/bar/foo"));
+	}
 }

@@ -203,11 +203,15 @@ public class UrlBuilder {
 			url = url + '?';
 			url = url + buildQueryString(queryStringParameters);
 		}
+		String contextPath = request.getContextPath();
+		if (!contextPath.equals("/")) {
+			url = contextPath + url;
+		}
 		return url;
 	}
 
-	private String buildQueryString(Map<String, String> params) {
-		StringBuffer queryString = new StringBuffer();
+	private static String buildQueryString(Map<String, String> params) {
+		StringBuilder queryString = new StringBuilder();
 		try {
 			Iterator<Map.Entry<String, String>> iterator = params.entrySet().iterator();
 
