@@ -22,7 +22,7 @@ import static java.net.URLEncoder.encode;
  * class MyController {
  *   <code>@RequestMapping("/dashboard")</code>
  *   public void handleDashboard() {
- *			 }
+ *				}
  * }
  * </pre>
  * then following code build url for this controller:
@@ -42,10 +42,8 @@ public class UrlBuilder {
 	private static final String ENCODING = "UTF8";
 	private final HttpServletRequest request;
 	private final Class<?> type;
-	private final String urlPattern;
-	private final Set<String> placeholderParameterNames;
-	private final Map<String, String> queryStringParameters = new HashMap<String, String>();
-	private final Map<String, String> urlParameters = new HashMap<String, String>();
+	private final String methodName;
+	private final Map<String, String> parameters = new HashMap<String, String>();
 
 	private static final Pattern placeholderPattern;
 
@@ -56,9 +54,7 @@ public class UrlBuilder {
 	private UrlBuilder(HttpServletRequest request, Class<?> type, String methodName) {
 		this.request = request;
 		this.type = type;
-		urlPattern = getUrlPattern(type, methodName);
-		placeholderParameterNames = getPlaceholderParameterNames(urlPattern);
-
+		this.methodName = methodName;
 	}
 
 	/**
@@ -84,32 +80,33 @@ public class UrlBuilder {
 	 *
 	 * @param type			 controller class object
 	 * @param methodName method name which url pattern is needed
+	 * @param parameters the set of given request parameters
 	 * @return url pattern
 	 */
-	private static String getUrlPattern(Class<?> type, String methodName) {
+	private static String getUrlPattern(Class<?> type, String methodName, Set<String> parameters) {
 		Method handlerMethod = getHandlerMethod(type, methodName);
+		String methodPattern = getMethodUrlPattern(handlerMethod, parameters);
 
 		String classPattern = getClassUrlPattern(type);
-		String methodPattern = getMethodUrlPattern(handlerMethod);
-
 		return classPattern != null
 			? classPattern.replace("*", methodPattern)
 			: methodPattern;
 
 	}
 
-	private static String getMethodUrlPattern(Method handlerMethod) {
+	private static String getMethodUrlPattern(Method handlerMethod, Set<String> parameters) {
 		RequestMapping mapping = handlerMethod.getAnnotation(RequestMapping.class);
 		if (mapping == null) {
 			throw new IllegalArgumentException("Method " + handlerMethod.getName() + "() on type: " +
 				handlerMethod.getDeclaringClass().getName() + " doesn't have @RequestMapping annotation");
 		}
-		// At the moment we'll take only first pattern
 		String[] urlPatterns = mapping.value();
-		if (urlPatterns.length > 1) {
-			throw new UnsupportedOperationException("Multiple handler mappings not supported");
+		for (String pattern : urlPatterns) {
+			if (parameters.containsAll(getPlaceholderParameterNames(pattern))) {
+				return pattern;
+			}
 		}
-		return urlPatterns[0];
+		return "";
 	}
 
 	private static Method getHandlerMethod(Class<?> type, String methodName) {
@@ -179,11 +176,7 @@ public class UrlBuilder {
 		if (name.isEmpty()) {
 			throw new IllegalArgumentException("Paramter name should not be empty");
 		}
-		if (placeholderParameterNames.contains(name)) {
-			urlParameters.put(name, value);
-		} else {
-			queryStringParameters.put(name, value);
-		}
+		parameters.put(name, value);
 		return this;
 	}
 
@@ -193,15 +186,17 @@ public class UrlBuilder {
 	 * @return url
 	 */
 	public String asString() {
+		String urlPattern = getUrlPattern(type, methodName, parameters.keySet());
+		Set<String> placeholderParameterNames = getPlaceholderParameterNames(urlPattern);
 		String url = urlPattern;
 
 		for (String name : placeholderParameterNames) {
-			url = url.replace("{" + name + "}", urlParameters.get(name));
+			url = url.replace("{" + name + "}", parameters.get(name));
+			parameters.remove(name);
 		}
 
-		if (!queryStringParameters.isEmpty()) {
-			url = url + '?';
-			url = url + buildQueryString(queryStringParameters);
+		if (!parameters.isEmpty()) {
+			url = url + '?' + buildQueryString(parameters);
 		}
 		String contextPath = request.getContextPath();
 		if (!contextPath.equals("/")) {
